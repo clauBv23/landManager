@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.11;
 
-// TODO: change the adding voters way
-import "hardhat/console.sol";
 import "./LandManager.sol";
 
 contract Ballot {
     address public landManagerContractAddr;
 
     struct Voter {
-        // uint32 weight; // weight is accumulated by delegation
         bool voted; // if true, that person already voted
-        // address delegate; // person delegated to
         uint16 vote; // index of the voted proposal
     }
 
@@ -55,7 +51,6 @@ contract Ballot {
 
         landManagerContractAddr = msg.sender;
 
-        // console.log("voters", _voters.length);
         // set the proposal
         Coordinates memory _coo;
         _coo.x1 = x1_;
@@ -84,8 +79,7 @@ contract Ballot {
         );
     }
 
-    /// Give your vote (including votes delegated to you)
-    /// to proposal `proposals[proposal].name`.
+    /// Give your vote
     function vote(uint16 proposal) external {
         require(
             LandManager(landManagerContractAddr).isOwner(msg.sender),

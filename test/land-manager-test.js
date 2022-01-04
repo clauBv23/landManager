@@ -46,7 +46,6 @@ describe('LandManager', function () {
       const proposal = await this.ballot.getProposal(1);
 
       // Success
-      // console.log('proposal', proposal);
       assert.equal(proposal.voteCount, 1);
     });
 
@@ -59,7 +58,6 @@ describe('LandManager', function () {
       let owners = await this.landContract.getOwners();
 
       // Success
-      // console.log('newGrantedLands', newGrantedLands);
       assert.equal(newGrantedLands.length, grantedLands.length + 1);
       assert.equal(newGrantedLands[0].owner, user1);
       assert.equal(owners.length, 2);
@@ -67,7 +65,6 @@ describe('LandManager', function () {
       // check no reasigning lands
       await expectRevert(this.landContract.askForLands(1, 2, 1, 2, { from: user2 }), 'The Land has already an owner');
       const ballot = await this.landContract.getBallot(user2);
-      // console.log('ballot', ballot);
     });
   });
 
@@ -106,7 +103,6 @@ describe('LandManager', function () {
       const proposal = await this.ballot.getProposal(1);
 
       // Success
-      console.log('proposal', proposal);
       assert.equal(proposal.voteCount, 2);
     });
 
@@ -117,13 +113,9 @@ describe('LandManager', function () {
 
       await this.landContract.checkBallot(user2);
 
-      // console.log('owners', owners);
       // check land extension
       const hight = await this.landContract.getHight();
       const width = await this.landContract.getWidth();
-
-      // console.log('width', width);
-      // console.log('hight', hight);
 
       assert.equal(width, 8);
       assert.equal(hight, 8);
@@ -155,11 +147,7 @@ describe('LandManager', function () {
     it('check no rights to vote', async () => {
       const { user2 } = await getNamedAccounts();
       // Success
-      // console.log('addd', this.landContract.address);
       await expectRevert(this.ballot.vote(1, { from: user2 }), 'Has no right to vote');
-
-      // const proposal = await this.ballot.getProposal(1);
-      // assert.equal(proposal.voteCount, 2);
     });
   });
 });

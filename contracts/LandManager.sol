@@ -4,7 +4,6 @@
 pragma solidity 0.8.11;
 
 import "./Ballot.sol";
-import "hardhat/console.sol";
 
 contract LandManager {
     address[] private _owners;
@@ -28,9 +27,6 @@ contract LandManager {
         uint32 y2;
         address owner;
     }
-
-    // map to store the initial location with the respective granted land
-    // mapping(uint256 => mapping(uint256 => Land)) grantedLands;
 
     Map private map;
     Land[] private _grantedLands;
@@ -66,10 +62,8 @@ contract LandManager {
             isGetLands(x1_, x2_, y1_, y2_),
             "The requested land is out of the map sizes"
         );
-        // console.log("isGet", isGet);
 
         // check can reserve land
-        // console.log(x1_, x2_, y1_, y2_);
         require(checkIsEmptyLand(x1_, x2_, y1_, y2_), "The Land has already an owner");
         Ballot ballot = new Ballot(_owners, x1_, x2_, y1_, y2_, true, msg.sender);
         _ballots[msg.sender] = ballot;
@@ -96,7 +90,6 @@ contract LandManager {
 
         bool isGet = ballotToCheck.winnerIsGetLands();
         address winnerAddr = ballotToCheck.winnerTo();
-        // console.log(winner);
         if (winner == 1) {
             if (isGet) {
                 asingLands(coords.x1, coords.x2, coords.y1, coords.y2, winnerAddr);
@@ -151,7 +144,6 @@ contract LandManager {
         uint32 y2_
     ) internal view returns (bool) {
         // check if the desire land don't colide with granted ones
-
         for (uint256 i = 0; i < _grantedLands.length; i++) {
             if (
                 theyColide(
