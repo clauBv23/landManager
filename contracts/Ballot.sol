@@ -6,7 +6,8 @@ import "hardhat/console.sol";
 import "./LandManager.sol";
 
 contract Ballot {
-    address landManagerContractAddr;
+    address public landManagerContractAddr;
+
     struct Voter {
         // uint32 weight; // weight is accumulated by delegation
         bool voted; // if true, that person already voted
