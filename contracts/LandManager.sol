@@ -2,8 +2,8 @@
 
 // solution list of granted lands
 
-/* TODO: change the constructor to define all the map coordinates (not only the dimenssions)
-        - define the map as initial and ending coordinates and width and high
+/* TODO: 
+        -check safe math
         - review the lower limits when assigning lands
         - check the extensions logic (if in the extension there is a part inside and another outside have to check it)
 */
@@ -20,17 +20,22 @@ contract LandManager {
 
     uint256 private _currentMapHigh;
     uint256 private _currentMapWidth;
+    Map private map;
 
-    struct Dimension {
-        uint256 width;
-        uint256 high;
+    struct Map {
+        uint32 x1;
+        uint32 x2;
+        uint32 y1;
+        uint32 y2;
+        uint32 high;
+        uint32 width;
     }
 
     struct Land {
-        uint256 x1;
-        uint256 y1;
-        uint256 x2;
-        uint256 y2;
+        uint32 x1;
+        uint32 y1;
+        uint32 x2;
+        uint32 y2;
         address owner;
     }
 
@@ -39,9 +44,20 @@ contract LandManager {
 
     Land[] private _grantedLands;
 
-    constructor(uint256 hight_, uint256 width_) {
-        _currentMapWidth = width_;
-        _currentMapHigh = hight_;
+    constructor(
+        uint32 x1_,
+        uint32 x2_,
+        uint32 y1_,
+        uint32 y2_
+    ) {
+        map.x1 = x1_;
+        map.x2 = x2_;
+        map.y1 = y1_;
+        map.y2 = y2_;
+
+        //! check safe math
+        map.width = x2_ - x1_;
+        map.high = y2_ - y1_;
 
         // set the msg.sender as initials owners
         _ownersDefined[msg.sender] = true;
@@ -49,15 +65,16 @@ contract LandManager {
     }
 
     function askForLands(
-        uint256 x1_,
-        uint256 x2_,
-        uint256 y1_,
-        uint256 y2_
+        uint32 x1_,
+        uint32 x2_,
+        uint32 y1_,
+        uint32 y2_
     ) public {
         address to = msg.sender;
 
         //check if it's get or extend land
-        bool isGet = isGetLands(x2_, y2_);
+        bool isGet = isGetLands(x1_, x2_, y1_, y2_);
+        // console.log("isGet", isGet);
 
         // check can reserve land
         if (isGet) {
@@ -67,7 +84,7 @@ contract LandManager {
                 "The Land has already an owner"
             );
         } else {
-            require(checkCanExtedLand(x1_, y1_), "The Land can't be extended");
+            require(checkCanExtedLand(x1_, x2_, y1_, y2_), "The Land can't be extended");
         }
 
         Ballot ballot = new Ballot(_owners, x1_, x2_, y1_, y2_, isGet, to);
@@ -77,7 +94,7 @@ contract LandManager {
     function checkBallot(address asker_) public {
         Ballot ballotToCheck = _ballots[asker_];
 
-        uint256 winner = ballotToCheck.winningProposal();
+        uint32 winner = ballotToCheck.winningProposal();
 
         Ballot.Coordinates memory coords = ballotToCheck.winnerCoords();
         bool isGet = ballotToCheck.winnerIsGetLands();
@@ -93,16 +110,23 @@ contract LandManager {
     }
 
     function asingLands(
-        uint256 x1_,
-        uint256 x2_,
-        uint256 y1_,
-        uint256 y2_,
+        uint32 x1_,
+        uint32 x2_,
+        uint32 y1_,
+        uint32 y2_,
         address to_,
         bool isExtend_
     ) internal {
+        // console.log("isExtend", isExtend_);
         if (isExtend_) {
-            _currentMapWidth = _currentMapWidth > x2_ ? _currentMapWidth : x2_;
-            _currentMapHigh = _currentMapHigh > y2_ ? _currentMapHigh : y2_;
+            // console.log("isExtend", isExtend_);
+            map.x1 = map.x1 < x1_ ? map.x1 : x1_;
+            map.x2 = map.x2 > x2_ ? map.x2 : x2_;
+            map.y1 = map.y1 < y1_ ? map.y1 : y1_;
+            map.y2 = map.y2 > y2_ ? map.y2 : y2_;
+
+            map.width = map.x2 - map.x1;
+            map.high = map.y2 - map.y1;
         }
         Land memory newLand;
         newLand.x1 = x1_;
@@ -121,10 +145,10 @@ contract LandManager {
     }
 
     function checkIsEmptyLand(
-        uint256 x1_,
-        uint256 x2_,
-        uint256 y1_,
-        uint256 y2_
+        uint32 x1_,
+        uint32 x2_,
+        uint32 y1_,
+        uint32 y2_
     ) internal view returns (bool) {
         // check if the desire land don't colide with granted ones
 
@@ -147,13 +171,24 @@ contract LandManager {
         return true;
     }
 
-    function checkCanExtedLand(uint256 x1_, uint256 y1_) internal view returns (bool) {
+    function checkCanExtedLand(
+        uint32 x1_,
+        uint32 x2_,
+        uint32 y1_,
+        uint32 y2_
+    ) internal view returns (bool) {
+        // check if there is a land on the map check if this piece can be gotten
         return x1_ > _currentMapWidth || y1_ > _currentMapHigh;
     }
 
     // define if the required land dimenssions are out of the current map bounds
-    function isGetLands(uint256 x2_, uint256 y2_) private view returns (bool) {
-        return x2_ <= _currentMapWidth || y2_ <= _currentMapHigh;
+    function isGetLands(
+        uint32 x1_,
+        uint32 x2_,
+        uint32 y1_,
+        uint32 y2_
+    ) private view returns (bool) {
+        return x1_ >= map.x1 && x2_ <= map.x2 && y1_ >= map.y1 && y2_ <= map.y2;
     }
 
     function getBallot(address addr) public view returns (Ballot) {
@@ -164,12 +199,12 @@ contract LandManager {
         return _grantedLands;
     }
 
-    function getHight() public view returns (uint256) {
-        return _currentMapHigh;
+    function getHight() public view returns (uint32) {
+        return map.high;
     }
 
-    function getWidth() public view returns (uint256) {
-        return _currentMapWidth;
+    function getWidth() public view returns (uint32) {
+        return map.width;
     }
 
     function getOwners() public view returns (address[] memory) {
@@ -177,14 +212,14 @@ contract LandManager {
     }
 
     function theyColide(
-        uint256 x1,
-        uint256 x2,
-        uint256 y1,
-        uint256 y2,
-        uint256 xp1,
-        uint256 xp2,
-        uint256 yp1,
-        uint256 yp2
+        uint32 x1,
+        uint32 x2,
+        uint32 y1,
+        uint32 y2,
+        uint32 xp1,
+        uint32 xp2,
+        uint32 yp1,
+        uint32 yp2
     ) internal pure returns (bool) {
         return x1 <= xp2 && x2 >= xp1 && y1 <= yp2 && y2 >= yp1;
     }
