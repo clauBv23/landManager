@@ -13,12 +13,7 @@ import "hardhat/console.sol";
 contract LandManager {
     address[] private _owners;
     mapping(address => bool) private _ownersDefined;
-
     mapping(address => Ballot) private _ballots;
-
-    uint256 private _currentMapHigh;
-    uint256 private _currentMapWidth;
-    Map private map;
 
     struct Map {
         uint32 x1;
@@ -40,6 +35,7 @@ contract LandManager {
     // map to store the initial location with the respective granted land
     // mapping(uint256 => mapping(uint256 => Land)) grantedLands;
 
+    Map private map;
     Land[] private _grantedLands;
 
     constructor(
@@ -73,15 +69,13 @@ contract LandManager {
             isGetLands(x1_, x2_, y1_, y2_),
             "The requested land is out of the map sizes"
         );
-        address to = msg.sender;
-
         // console.log("isGet", isGet);
 
         // check can reserve land
         // console.log(x1_, x2_, y1_, y2_);
         require(checkIsEmptyLand(x1_, x2_, y1_, y2_), "The Land has already an owner");
-        Ballot ballot = new Ballot(_owners, x1_, x2_, y1_, y2_, true, to);
-        _ballots[to] = ballot;
+        Ballot ballot = new Ballot(_owners, x1_, x2_, y1_, y2_, true, msg.sender);
+        _ballots[msg.sender] = ballot;
     }
 
     function extendLands(
@@ -92,17 +86,17 @@ contract LandManager {
     ) public {
         // check if it's out of the map
         require(!isGetLands(x1_, x2_, y1_, y2_), "The Land can't be extended");
-        address to = msg.sender;
-        Ballot ballot = new Ballot(_owners, x1_, x2_, y1_, y2_, false, to);
-        _ballots[to] = ballot;
+        Ballot ballot = new Ballot(_owners, x1_, x2_, y1_, y2_, false, msg.sender);
+        _ballots[msg.sender] = ballot;
     }
 
     function checkBallot(address asker_) public {
         Ballot ballotToCheck = _ballots[asker_];
 
-        uint32 winner = ballotToCheck.winningProposal();
+        uint256 winner = ballotToCheck.winningProposal();
 
         Ballot.Coordinates memory coords = ballotToCheck.winnerCoords();
+
         bool isGet = ballotToCheck.winnerIsGetLands();
         address winnerAddr = ballotToCheck.winnerTo();
         // console.log(winner);
@@ -161,7 +155,7 @@ contract LandManager {
     ) internal view returns (bool) {
         // check if the desire land don't colide with granted ones
 
-        for (uint16 i = 0; i < _grantedLands.length; i++) {
+        for (uint256 i = 0; i < _grantedLands.length; i++) {
             if (
                 theyColide(
                     x1_,
