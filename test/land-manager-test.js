@@ -56,11 +56,13 @@ describe('LandManager', function () {
       await this.ballot.vote(1);
       await this.landContract.checkBallot(user1);
       let newGrantedLands = await this.landContract.getGrantedLands();
+      let owners = await this.landContract.getOwners();
 
       // Success
       // console.log('newGrantedLands', newGrantedLands);
       assert.equal(newGrantedLands.length, grantedLands.length + 1);
       assert.equal(newGrantedLands[0].owner, user1);
+      assert.equal(owners.length, 2);
 
       // check no reasigning lands
       await expectRevert(this.landContract.askForLands(1, 2, 1, 2, { from: user2 }), 'The Land has already an owner');
@@ -85,13 +87,13 @@ describe('LandManager', function () {
       // ---------------------------------------------- //
       // ask for extend lands
       const { user2 } = await getNamedAccounts();
-      await this.landContract.askForLands(7, 8, 7, 8, { from: user2 });
+      await this.landContract.extendLands(7, 8, 7, 8, { from: user2 });
 
       const ballot = await this.landContract.getBallot(user2);
       this.ballot = await Ballot.at(ballot);
     });
 
-    it('check ballot entension creation', async () => {
+    it('check ballot extension creation', async () => {
       // Success
       assert.notEqual(this.ballot.address, constants.ZERO_ADDRESS);
     });
@@ -104,26 +106,16 @@ describe('LandManager', function () {
       const proposal = await this.ballot.getProposal(1);
 
       // Success
-      // console.log('proposal', proposal);
+      console.log('proposal', proposal);
       assert.equal(proposal.voteCount, 2);
     });
 
-    it('check lands assignation and extension', async () => {
+    it('check lands extension', async () => {
       const { user2 } = await getNamedAccounts();
-      let grantedLands = await this.landContract.getGrantedLands();
       await this.ballot.vote(1);
       await this.landContract.checkBallot(user2);
-      let newGrantedLands = await this.landContract.getGrantedLands();
-      let owners = await this.landContract.getOwners();
 
       // console.log('owners', owners);
-
-      // Success
-      // console.log('newGrantedLands', newGrantedLands);
-      assert.equal(newGrantedLands.length, grantedLands.length + 1);
-      assert.equal(newGrantedLands[1].owner, user2);
-      assert.equal(owners.length, 3);
-
       // check land extension
       const hight = await this.landContract.getHight();
       const width = await this.landContract.getWidth();
@@ -133,6 +125,14 @@ describe('LandManager', function () {
 
       assert.equal(width, 8);
       assert.equal(hight, 8);
+    });
+
+    it('check lands extension fails', async () => {
+      await expectRevert(this.landContract.extendLands(2, 3, 2, 3), "The Land can't be extended");
+    });
+
+    it('check lands request fails', async () => {
+      await expectRevert(this.landContract.askForLands(7, 8, 7, 8), 'The requested land is out of the map sizes');
     });
   });
 
