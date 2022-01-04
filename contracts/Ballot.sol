@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.11;
 
+import "hardhat/console.sol";
+
 contract Ballot {
     struct Voter {
         uint256 weight; // weight is accumulated by delegation
@@ -52,6 +54,7 @@ contract Ballot {
             voters[_voters[i]].weight = 1;
         }
 
+        // console.log("voters", _voters.length);
         // set the proposal
         Coordinates memory _coo;
         _coo.x1 = x1_;
@@ -129,5 +132,9 @@ contract Ballot {
 
     function winnerIsGetLands() external view returns (bool isGet) {
         isGet = proposals[winningProposal()].isGetLands;
+    }
+
+    function getProposal(uint256 proposal) external view returns (Proposal memory prop) {
+        prop = proposals[proposal];
     }
 }

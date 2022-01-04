@@ -4,6 +4,7 @@
 pragma solidity 0.8.11;
 
 import "./Ballot.sol";
+import "hardhat/console.sol";
 
 contract LandManager {
     address[] private _owners;
@@ -51,6 +52,7 @@ contract LandManager {
 
         // check can reserve land
         if (isGet) {
+            // console.log(x1_, x2_, y1_, y2_);
             require(
                 checkIsEmptyLand(x1_, x2_, y1_, y2_),
                 "The Land has already an owner"
@@ -71,7 +73,8 @@ contract LandManager {
         Ballot.Coordinates memory coords = ballotToCheck.winnerCoords();
         bool isGet = ballotToCheck.winnerIsGetLands();
         address winnerAddr = ballotToCheck.winnerTo();
-        if (winner == 0) {
+        // console.log(winner);
+        if (winner == 1) {
             if (isGet) {
                 asingLands(coords.x1, coords.x2, coords.y1, coords.y2, winnerAddr, false);
             } else {
@@ -98,7 +101,11 @@ contract LandManager {
         newLand.x2 = x2_;
         newLand.y2 = y2_;
         newLand.owner = to_;
+        // add land to granted lands
         _grantedLands.push(newLand);
+
+        // add to owners list
+        _owners.push(to_);
     }
 
     function checkIsEmptyLand(
@@ -150,6 +157,10 @@ contract LandManager {
 
     function getWidth() public view returns (uint256) {
         return _currentMapWidth;
+    }
+
+    function getOwners() public view returns (address[] memory) {
+        return _owners;
     }
 
     function theyColide(
