@@ -1,4 +1,4 @@
-#### Test
+## Test
 
 Let me describe test task.
 
@@ -9,7 +9,7 @@ The map starts created by the first owner (contract creator) with the following 
 
 Now we have 2 possible actions.
 
-- ## FIRST ACTION:
+- #### FIRST ACTION:
 
   getting terrain on that map.
   next person comes and wants to own a plot with certain coordinates [xx1,xx2]x[yy1,yy2] contained inside the limits of the map (this is not a purchase/buy, just the creator allowing others to use the plot and build)
@@ -19,7 +19,7 @@ Now we have 2 possible actions.
   If it is approved, then that new guy is added as an owner - that terrain becomes unavailable after
   Proposals are added and resolved in chronological order
 
-- ## SECOND ACTION:
+- #### SECOND ACTION:
 
   extending the map
   This is a proposal to extend the dimensions of the terrain (which was initally limited, for example 30x30 plots)
