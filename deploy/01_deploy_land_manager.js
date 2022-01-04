@@ -5,7 +5,7 @@ module.exports = async function ({ deployments, getNamedAccounts }) {
   await deploy('LandManager', {
     from: deployer,
     log: true,
-    args: [5, 5],
+    args: [5, 6],
   });
 };
 

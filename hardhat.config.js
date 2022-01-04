@@ -10,6 +10,8 @@ require('hardhat-deploy');
 module.exports = {
   namedAccounts: {
     deployer: 0,
+    user1: 1,
+    user2: 2,
   },
   solidity: '0.8.11',
 };
