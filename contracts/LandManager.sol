@@ -4,8 +4,6 @@
 
 /* TODO: 
         -check safe math
-        - review the lower limits when assigning lands
-        - check the extensions logic (if in the extension there is a part inside and another outside have to check it)
 */
 pragma solidity 0.8.11;
 
@@ -70,24 +68,32 @@ contract LandManager {
         uint32 y1_,
         uint32 y2_
     ) public {
+        //check if it's get or extend land
+        require(
+            isGetLands(x1_, x2_, y1_, y2_),
+            "The requested land is out of the map sizes"
+        );
         address to = msg.sender;
 
-        //check if it's get or extend land
-        bool isGet = isGetLands(x1_, x2_, y1_, y2_);
         // console.log("isGet", isGet);
 
         // check can reserve land
-        if (isGet) {
-            // console.log(x1_, x2_, y1_, y2_);
-            require(
-                checkIsEmptyLand(x1_, x2_, y1_, y2_),
-                "The Land has already an owner"
-            );
-        } else {
-            require(checkCanExtedLand(x1_, x2_, y1_, y2_), "The Land can't be extended");
-        }
+        // console.log(x1_, x2_, y1_, y2_);
+        require(checkIsEmptyLand(x1_, x2_, y1_, y2_), "The Land has already an owner");
+        Ballot ballot = new Ballot(_owners, x1_, x2_, y1_, y2_, true, to);
+        _ballots[to] = ballot;
+    }
 
-        Ballot ballot = new Ballot(_owners, x1_, x2_, y1_, y2_, isGet, to);
+    function extendLands(
+        uint32 x1_,
+        uint32 x2_,
+        uint32 y1_,
+        uint32 y2_
+    ) public {
+        // check if it's out of the map
+        require(!isGetLands(x1_, x2_, y1_, y2_), "The Land can't be extended");
+        address to = msg.sender;
+        Ballot ballot = new Ballot(_owners, x1_, x2_, y1_, y2_, false, to);
         _ballots[to] = ballot;
     }
 
@@ -102,11 +108,26 @@ contract LandManager {
         // console.log(winner);
         if (winner == 1) {
             if (isGet) {
-                asingLands(coords.x1, coords.x2, coords.y1, coords.y2, winnerAddr, false);
+                asingLands(coords.x1, coords.x2, coords.y1, coords.y2, winnerAddr);
             } else {
-                asingLands(coords.x1, coords.x2, coords.y1, coords.y2, winnerAddr, true);
+                extendMap(coords.x1, coords.x2, coords.y1, coords.y2);
             }
         }
+    }
+
+    function extendMap(
+        uint32 x1_,
+        uint32 x2_,
+        uint32 y1_,
+        uint32 y2_
+    ) internal {
+        map.x1 = map.x1 < x1_ ? map.x1 : x1_;
+        map.x2 = map.x2 > x2_ ? map.x2 : x2_;
+        map.y1 = map.y1 < y1_ ? map.y1 : y1_;
+        map.y2 = map.y2 > y2_ ? map.y2 : y2_;
+
+        map.width = map.x2 - map.x1;
+        map.high = map.y2 - map.y1;
     }
 
     function asingLands(
@@ -114,20 +135,8 @@ contract LandManager {
         uint32 x2_,
         uint32 y1_,
         uint32 y2_,
-        address to_,
-        bool isExtend_
+        address to_
     ) internal {
-        // console.log("isExtend", isExtend_);
-        if (isExtend_) {
-            // console.log("isExtend", isExtend_);
-            map.x1 = map.x1 < x1_ ? map.x1 : x1_;
-            map.x2 = map.x2 > x2_ ? map.x2 : x2_;
-            map.y1 = map.y1 < y1_ ? map.y1 : y1_;
-            map.y2 = map.y2 > y2_ ? map.y2 : y2_;
-
-            map.width = map.x2 - map.x1;
-            map.high = map.y2 - map.y1;
-        }
         Land memory newLand;
         newLand.x1 = x1_;
         newLand.y1 = y1_;
@@ -169,16 +178,6 @@ contract LandManager {
             }
         }
         return true;
-    }
-
-    function checkCanExtedLand(
-        uint32 x1_,
-        uint32 x2_,
-        uint32 y1_,
-        uint32 y2_
-    ) internal view returns (bool) {
-        // check if there is a land on the map check if this piece can be gotten
-        return x1_ > _currentMapWidth || y1_ > _currentMapHigh;
     }
 
     // define if the required land dimenssions are out of the current map bounds
