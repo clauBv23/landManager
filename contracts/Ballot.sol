@@ -3,12 +3,14 @@ pragma solidity 0.8.11;
 
 // TODO: change the adding voters way
 import "hardhat/console.sol";
+import "./LandManager.sol";
 
 contract Ballot {
+    address landManagerContractAddr;
     struct Voter {
-        uint32 weight; // weight is accumulated by delegation
+        // uint32 weight; // weight is accumulated by delegation
         bool voted; // if true, that person already voted
-        address delegate; // person delegated to
+        // address delegate; // person delegated to
         uint16 vote; // index of the voted proposal
     }
 
@@ -50,10 +52,7 @@ contract Ballot {
         // set the proposals to current owners
         chairperson = _voters[0];
 
-        //set the voters address
-        for (uint32 i = 0; i < _voters.length; i++) {
-            voters[_voters[i]].weight = 1;
-        }
+        landManagerContractAddr = msg.sender;
 
         // console.log("voters", _voters.length);
         // set the proposal
@@ -84,27 +83,23 @@ contract Ballot {
         );
     }
 
-    // Give `voter` the right to vote on this ballot.
-    // May only be called by `chairperson`.
-    function giveRightToVote(address voter) external {
-        require(msg.sender == chairperson, "Can't give right to vote.");
-        require(!voters[voter].voted, "The voter already voted.");
-        voters[voter].weight = 1;
-    }
-
     /// Give your vote (including votes delegated to you)
     /// to proposal `proposals[proposal].name`.
     function vote(uint16 proposal) external {
+        require(
+            LandManager(landManagerContractAddr).isOwner(msg.sender),
+            "Has no right to vote"
+        );
         Voter storage sender = voters[msg.sender];
-        require(sender.weight != 0, "Has no right to vote");
         require(!sender.voted, "Already voted.");
+
         sender.voted = true;
         sender.vote = proposal;
 
         // If `proposal` is out of the range of the array,
         // this will throw automatically and revert all
         // changes.
-        proposals[proposal].voteCount += sender.weight;
+        proposals[proposal].voteCount += 1;
     }
 
     /// @dev Computes the winning proposal taking all

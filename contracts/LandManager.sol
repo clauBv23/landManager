@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 // solution list of granted lands
-
-/* TODO: 
-        -check safe math
-*/
 pragma solidity 0.8.11;
 
 import "./Ballot.sol";
@@ -13,6 +9,7 @@ import "hardhat/console.sol";
 contract LandManager {
     address[] private _owners;
     mapping(address => bool) private _ownersDefined;
+
     mapping(address => Ballot) private _ballots;
 
     struct Map {
@@ -202,6 +199,10 @@ contract LandManager {
 
     function getOwners() public view returns (address[] memory) {
         return _owners;
+    }
+
+    function isOwner(address owner_) public view returns (bool) {
+        return _ownersDefined[owner_];
     }
 
     function theyColide(
