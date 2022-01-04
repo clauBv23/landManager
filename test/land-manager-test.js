@@ -113,6 +113,8 @@ describe('LandManager', function () {
     it('check lands extension', async () => {
       const { user2 } = await getNamedAccounts();
       await this.ballot.vote(1);
+      await expectRevert(this.ballot.vote(0), 'Already voted.');
+
       await this.landContract.checkBallot(user2);
 
       // console.log('owners', owners);
@@ -150,28 +152,11 @@ describe('LandManager', function () {
       await this.landContract.checkBallot(user1);
     });
 
-    it('check giveRightToVote', async () => {
+    it('check no rights to vote', async () => {
       const { user2 } = await getNamedAccounts();
       // Success
       // console.log('addd', this.landContract.address);
-      await this.ballot.giveRightToVote(user2);
-      await this.ballot.vote(1, { from: user2 });
-      const proposal = await this.ballot.getProposal(1);
-      assert.equal(proposal.voteCount, 2);
-    });
-
-    it('check giveRightToVote fails', async () => {
-      const { user2, user1 } = await getNamedAccounts();
-      // Success
-      // console.log('addd', this.landContract.address);
       await expectRevert(this.ballot.vote(1, { from: user2 }), 'Has no right to vote');
-
-      await expectRevert(this.ballot.giveRightToVote(user2, { from: user1 }), "Can't give right to vote.");
-      await this.ballot.giveRightToVote(user2);
-      await this.ballot.vote(1, { from: user2 });
-      await expectRevert(this.ballot.vote(1, { from: user2 }), 'Already voted.');
-
-      await expectRevert(this.ballot.giveRightToVote(user2), 'The voter already voted.');
 
       // const proposal = await this.ballot.getProposal(1);
       // assert.equal(proposal.voteCount, 2);
