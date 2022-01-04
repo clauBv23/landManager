@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.11;
 
+// TODO: change the add voters way
 import "hardhat/console.sol";
 
 contract Ballot {
@@ -47,7 +48,7 @@ contract Ballot {
         address to_
     ) {
         // set the proposals to current owners
-        chairperson = msg.sender;
+        chairperson = _voters[0];
 
         //set the voters address
         for (uint256 i = 0; i < _voters.length; i++) {
@@ -86,9 +87,8 @@ contract Ballot {
     // Give `voter` the right to vote on this ballot.
     // May only be called by `chairperson`.
     function giveRightToVote(address voter) external {
-        require(msg.sender == chairperson, "Only chairperson can give right to vote.");
+        require(msg.sender == chairperson, "Can't give right to vote.");
         require(!voters[voter].voted, "The voter already voted.");
-        require(voters[voter].weight == 0, "The voter does not have vote rights");
         voters[voter].weight = 1;
     }
 

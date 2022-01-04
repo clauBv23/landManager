@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MIT
 
 // solution list of granted lands
+
+/* TODO: change the constructor to define all the map coordinates (not only the dimenssions)
+        - define the map as initial and ending coordinates and width and high
+        - review the lower limits when assigning lands
+        - check the extensions logic (if in the extension there is a part inside and another outside have to check it)
+*/
 pragma solidity 0.8.11;
 
 import "./Ballot.sol";
@@ -8,6 +14,8 @@ import "hardhat/console.sol";
 
 contract LandManager {
     address[] private _owners;
+    mapping(address => bool) private _ownersDefined;
+
     mapping(address => Ballot) private _ballots;
 
     uint256 private _currentMapHigh;
@@ -36,6 +44,7 @@ contract LandManager {
         _currentMapHigh = hight_;
 
         // set the msg.sender as initials owners
+        _ownersDefined[msg.sender] = true;
         _owners.push(msg.sender);
     }
 
@@ -105,7 +114,10 @@ contract LandManager {
         _grantedLands.push(newLand);
 
         // add to owners list
-        _owners.push(to_);
+        if (!_ownersDefined[to_]) {
+            _ownersDefined[to_] = true;
+            _owners.push(to_);
+        }
     }
 
     function checkIsEmptyLand(
@@ -115,6 +127,7 @@ contract LandManager {
         uint256 y2_
     ) internal view returns (bool) {
         // check if the desire land don't colide with granted ones
+
         for (uint16 i = 0; i < _grantedLands.length; i++) {
             if (
                 theyColide(
@@ -173,6 +186,6 @@ contract LandManager {
         uint256 yp1,
         uint256 yp2
     ) internal pure returns (bool) {
-        return x1 < xp2 && x2 > xp1 && y1 < yp2 && y2 > yp1;
+        return x1 <= xp2 && x2 >= xp1 && y1 <= yp2 && y2 >= yp1;
     }
 }
