@@ -30,7 +30,7 @@ describe('LandManager', function () {
   describe('ask for lands (1,1)(2,2)', async () => {
     beforeEach(async () => {
       const { user1 } = await getNamedAccounts();
-      await this.landContract.askForLands(1, 1, 2, 2, { from: user1 });
+      await this.landContract.askForLands(1, 2, 1, 2, { from: user1 });
 
       const ballot = await this.landContract.getBallot(user1);
       this.ballot = await Ballot.at(ballot);
@@ -63,7 +63,7 @@ describe('LandManager', function () {
       assert.equal(newGrantedLands[0].owner, user1);
 
       // check no reasigning lands
-      await expectRevert(this.landContract.askForLands(1, 1, 2, 2, { from: user2 }), 'The Land has already an owner');
+      await expectRevert(this.landContract.askForLands(1, 2, 1, 2, { from: user2 }), 'The Land has already an owner');
       const ballot = await this.landContract.getBallot(user2);
       // console.log('ballot', ballot);
     });
@@ -73,7 +73,7 @@ describe('LandManager', function () {
     beforeEach(async () => {
       // asign lands
       const { user1 } = await getNamedAccounts();
-      await this.landContract.askForLands(1, 1, 2, 2, { from: user1 });
+      await this.landContract.askForLands(1, 2, 1, 2, { from: user1 });
 
       const firstBallot = await this.landContract.getBallot(user1);
       this.firstBallot = await Ballot.at(firstBallot);
@@ -85,7 +85,7 @@ describe('LandManager', function () {
       // ---------------------------------------------- //
       // ask for extend lands
       const { user2 } = await getNamedAccounts();
-      await this.landContract.askForLands(7, 7, 8, 8, { from: user2 });
+      await this.landContract.askForLands(7, 8, 7, 8, { from: user2 });
 
       const ballot = await this.landContract.getBallot(user2);
       this.ballot = await Ballot.at(ballot);
@@ -131,7 +131,7 @@ describe('LandManager', function () {
       // console.log('width', width);
       // console.log('hight', hight);
 
-      assert.equal(width, 7);
+      assert.equal(width, 8);
       assert.equal(hight, 8);
     });
   });
