@@ -1,7 +1,7 @@
 const LandManager = artifacts.require('LandManager');
 const Ballot = artifacts.require('Ballot');
 
-const { constants } = require('@openzeppelin/test-helpers');
+const { constants, expectRevert } = require('@openzeppelin/test-helpers');
 
 describe('LandManager', function () {
   beforeEach(async () => {
@@ -51,7 +51,7 @@ describe('LandManager', function () {
     });
 
     it('check lands assignation', async () => {
-      const { user1 } = await getNamedAccounts();
+      const { user1, user2 } = await getNamedAccounts();
       let grantedLands = await this.landContract.getGrantedLands();
       await this.ballot.vote(1);
       await this.landContract.checkBallot(user1);
@@ -61,6 +61,11 @@ describe('LandManager', function () {
       // console.log('newGrantedLands', newGrantedLands);
       assert.equal(newGrantedLands.length, grantedLands.length + 1);
       assert.equal(newGrantedLands[0].owner, user1);
+
+      // check no reasigning lands
+      await expectRevert(this.landContract.askForLands(1, 1, 2, 2, { from: user2 }), 'The Land has already an owner');
+      const ballot = await this.landContract.getBallot(user2);
+      // console.log('ballot', ballot);
     });
   });
 
@@ -109,11 +114,15 @@ describe('LandManager', function () {
       await this.ballot.vote(1);
       await this.landContract.checkBallot(user2);
       let newGrantedLands = await this.landContract.getGrantedLands();
+      let owners = await this.landContract.getOwners();
+
+      // console.log('owners', owners);
 
       // Success
       // console.log('newGrantedLands', newGrantedLands);
       assert.equal(newGrantedLands.length, grantedLands.length + 1);
       assert.equal(newGrantedLands[1].owner, user2);
+      assert.equal(owners.length, 3);
 
       // check land extension
       const hight = await this.landContract.getHight();
@@ -124,6 +133,48 @@ describe('LandManager', function () {
 
       assert.equal(width, 7);
       assert.equal(hight, 8);
+    });
+  });
+
+  describe('test ballot', async () => {
+    beforeEach(async () => {
+      // asign lands
+      const { user1 } = await getNamedAccounts();
+      await this.landContract.askForLands(1, 1, 2, 2, { from: user1 });
+
+      const ballot = await this.landContract.getBallot(user1);
+      this.ballot = await Ballot.at(ballot);
+      // vote
+      await this.ballot.vote(1);
+      // accept the land assignation
+      await this.landContract.checkBallot(user1);
+    });
+
+    it('check giveRightToVote', async () => {
+      const { user2 } = await getNamedAccounts();
+      // Success
+      // console.log('addd', this.landContract.address);
+      await this.ballot.giveRightToVote(user2);
+      await this.ballot.vote(1, { from: user2 });
+      const proposal = await this.ballot.getProposal(1);
+      assert.equal(proposal.voteCount, 2);
+    });
+
+    it('check giveRightToVote fails', async () => {
+      const { user2, user1 } = await getNamedAccounts();
+      // Success
+      // console.log('addd', this.landContract.address);
+      await expectRevert(this.ballot.vote(1, { from: user2 }), 'Has no right to vote');
+
+      await expectRevert(this.ballot.giveRightToVote(user2, { from: user1 }), "Can't give right to vote.");
+      await this.ballot.giveRightToVote(user2);
+      await this.ballot.vote(1, { from: user2 });
+      await expectRevert(this.ballot.vote(1, { from: user2 }), 'Already voted.');
+
+      await expectRevert(this.ballot.giveRightToVote(user2), 'The voter already voted.');
+
+      // const proposal = await this.ballot.getProposal(1);
+      // assert.equal(proposal.voteCount, 2);
     });
   });
 });
