@@ -8,5 +8,8 @@ require('hardhat-deploy');
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
+  namedAccounts: {
+    deployer: 0,
+  },
   solidity: '0.8.11',
 };
