@@ -31,3 +31,6 @@ Now we have 2 possible actions.
   - Storing the maps (coordinates)
   - Comparing if some terrain is not available
   - Voting system
+
+
+edit 
